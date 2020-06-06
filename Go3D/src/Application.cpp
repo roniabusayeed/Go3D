@@ -4,6 +4,9 @@
 #include "Shader.h"
 #include "vendor/stb_image.h"
 #include "DebugUtils.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 #define SCR_WIDTH 800
@@ -39,43 +42,80 @@ int main()
     }
 
     // Vertex data.
-    float vertices[] =
-    {
-        // Positions    Texture coordinates
-        -0.5f, -0.5f,   0.0f, 0.0f,
-         0.5f, -0.5f,   1.0f, 0.0f,
-         0.5f,  0.5f,   1.0f, 1.0f,
-        -0.5f,  0.5f,   0.0f, 1.0f,
+    float vertices[] = {
+        // Position             // Texture coordinates
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     // 0
+         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,     // 1
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 2
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 3
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     // 4
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     // 5
+                                                
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 6
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     // 7
+         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,     // 8
+         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,     // 9
+        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,     // 10
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 11
+                                                
+        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 12
+        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 13
+        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 14
+        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 15
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 16
+        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 17
+                                                
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 18
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 29
+         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 20
+         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 21
+         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 22
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 23
+                                                
+        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 24 
+         0.5f, -0.5f, -0.5f,    1.0f, 1.0f,     // 25
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     // 26
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     // 27
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 28
+        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 29
+                                                
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     // 30
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 31
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 32
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 33
+        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,     // 34
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f      // 35
     };
 
     // Index data.
-    unsigned int indices[] =
-    {
-        0, 1, 2,
-        0, 2, 3,
-    };
+    // unsigned int indices[] =
+    // {
+    //     0, 1, 2,
+    //     0, 2, 3,
+    // };
 
     // Generate buffers.
-    unsigned int vb, ib, va;
+    unsigned int vb, va;
+    // unsigned int ib;
     glGenBuffers(1, &vb);
-    glGenBuffers(1, &ib);
+    // glGenBuffers(1, &ib);
     glGenVertexArrays(1, &va);
 
     // Copy vertex buffer data.
     glBindBuffer(GL_ARRAY_BUFFER, vb);
-    glBufferData(GL_ARRAY_BUFFER, 4 * 4 * sizeof(float), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 36 * 5 * sizeof(float), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Copy index buffer data.
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // Pack vertex buffer and vertex buffer layout into vertex array object.
     glBindVertexArray(va);
     glBindBuffer(GL_ARRAY_BUFFER, vb);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void*)0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void*)(2 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (const void*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (const void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
@@ -112,6 +152,21 @@ int main()
 
     shader->SetUniform("u_texture", 0); // Send the texture bounded to slot=0 to the u_texture uniform.
 
+    
+    // Tranformations
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.f));   // Push the camera back (towards me)
+
+    glm::mat4 projection;
+    projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+    shader->SetUniform("u_model", model);
+    shader->SetUniform("u_view", view);
+    shader->SetUniform("u_projection", projection);
+
 
     // Render loop.
     while (!glfwWindowShouldClose(window))
@@ -121,8 +176,9 @@ int main()
 
         // Render.
         glBindVertexArray(va);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+        // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Swap buffers and poll input events.
         glfwSwapBuffers(window);
@@ -130,6 +186,10 @@ int main()
     }
 
     // Clean up.
+    glDeleteBuffers(1, &vb);
+    // glDeleteBuffers(1, &ib);
+    glDeleteVertexArrays(1, &va);
+    glDeleteTextures(1, &texture);
     delete shader;
     glfwTerminate();
 }

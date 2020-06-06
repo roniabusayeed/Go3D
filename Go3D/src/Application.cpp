@@ -168,12 +168,13 @@ int main()
     shader->SetUniform("u_view", view);
     shader->SetUniform("u_projection", projection);
 
+    glEnable(GL_DEPTH_TEST);
 
     // Render loop.
     while (!glfwWindowShouldClose(window))
     {
         ProcessInput(window);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render.
         glBindVertexArray(va);

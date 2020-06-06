@@ -34,6 +34,8 @@ int main()
     }
     glfwMakeContextCurrent(window);
 
+    glfwSwapInterval(1);
+
     // Initialize glad.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -155,7 +157,6 @@ int main()
     
     // Tranformations
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     glm::mat4 view = glm::mat4(1.0f);
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.f));   // Push the camera back (towards me)
@@ -163,7 +164,7 @@ int main()
     glm::mat4 projection;
     projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
-    shader->SetUniform("u_model", model);
+    // shader->SetUniform("u_model", model);
     shader->SetUniform("u_view", view);
     shader->SetUniform("u_projection", projection);
 
@@ -178,6 +179,9 @@ int main()
         glBindVertexArray(va);
         // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
         // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        model = glm::rotate(model, (float)glfwGetTime()/1000 * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+        shader->SetUniform("u_model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Swap buffers and poll input events.

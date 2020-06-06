@@ -6,6 +6,8 @@
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
 
+void ProcessInput(GLFWwindow* window);
+
 int main()
 {
     // Initialize GLFW library.
@@ -36,6 +38,7 @@ int main()
     // Render loop.
     while (!glfwWindowShouldClose(window))
     {
+        ProcessInput(window);
         glClear(GL_COLOR_BUFFER_BIT);
 
 
@@ -45,4 +48,10 @@ int main()
     }
 
     glfwTerminate();
+}
+
+void ProcessInput(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
 }

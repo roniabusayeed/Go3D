@@ -12,6 +12,15 @@
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
 
+#ifdef _DEBUG 
+#define TEXTURE_PATH "res/textures/amin.jpg"
+#define SHADER_PATH "res/shaders/source.shader"
+#else
+#define TEXTURE_PATH "amin.jpg"
+#define SHADER_PATH "source.shader"
+#endif
+
+
 void ProcessInput(GLFWwindow* window);
 
 int main()
@@ -123,7 +132,7 @@ int main()
     glBindVertexArray(0);
 
     
-    Shader* shader = new Shader("res/shaders/source.shader");
+    Shader* shader = new Shader(SHADER_PATH);
     shader->Bind();
 
     
@@ -139,7 +148,7 @@ int main()
 
     int imgWidth, imgHeight, nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* textureData = stbi_load("res/textures/texture.jpg", &imgWidth, &imgHeight, &nrChannels, 0);
+    unsigned char* textureData = stbi_load(TEXTURE_PATH, &imgWidth, &imgHeight, &nrChannels, 0);
     if (!textureData)
         __debugbreak();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
@@ -168,6 +177,19 @@ int main()
     shader->SetUniform("u_view", view);
     shader->SetUniform("u_projection", projection);
 
+    glm::vec3 cubePositions[] = {
+    glm::vec3(0.0f,  0.0f,  0.0f),
+    glm::vec3(2.0f,  5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3(2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f,  3.0f, -7.5f),
+    glm::vec3(1.3f, -2.0f, -2.5f),
+    glm::vec3(1.5f,  2.0f, -2.5f),
+    glm::vec3(1.5f,  0.2f, -1.5f),
+    glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
+
     glEnable(GL_DEPTH_TEST);
 
     // Render loop.
@@ -181,9 +203,17 @@ int main()
         // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
         // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        model = glm::rotate(model, (float)glfwGetTime()/1000 * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-        shader->SetUniform("u_model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // model = glm::rotate(model, (float)glfwGetTime()/1000 * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+        // shader->SetUniform("u_model", model);
+        for (int i = 0; i < 10; i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = glm::radians((float)glfwGetTime()/5 * (i + 1) * 20.0f);
+            model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+            shader->SetUniform("u_model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         // Swap buffers and poll input events.
         glfwSwapBuffers(window);

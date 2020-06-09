@@ -26,6 +26,10 @@ void ProcessInput(GLFWwindow* window);
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
 static Shader* shader = nullptr;
 
+static glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 3.f);
+static glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
+static glm::vec3 upVector = glm::vec3(0.f, 1.f, 0.f);
+
 glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector)
 {
     glm::vec3 camZ = glm::normalize(cameraPos - cameraTarget);
@@ -206,9 +210,7 @@ int main()
         // Render.
         glBindVertexArray(va);
         
-        glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 3.f);
-        glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
-        glm::vec3 upVector = glm::vec3(0.f, 1.f, 0.f);
+        
         glm::mat4 view = LookAt(cameraPos, cameraPos + cameraFront, upVector);
         shader->SetUniform("u_view", view);
 
@@ -244,6 +246,18 @@ void ProcessInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    // Camera controller.
+    const float cameraSpeed = .05f;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraFront * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos += -cameraFront * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos += -glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
+        
 }
 
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height)

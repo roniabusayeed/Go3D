@@ -13,10 +13,10 @@
 #define SCR_HEIGHT 600
 
 #ifdef _DEBUG 
-#define TEXTURE_PATH "res/textures/amin.jpg"
+#define TEXTURE_PATH "res/textures/battlefield.jpg"
 #define SHADER_PATH "res/shaders/source.shader"
 #else
-#define TEXTURE_PATH "amin.jpg"
+#define TEXTURE_PATH "battlefield.jpg"
 #define SHADER_PATH "source.shader"
 #endif
 
@@ -117,29 +117,15 @@ int main()
         -0.5f,  0.5f, -0.5f,    0.0f, 1.0f      // 35
     };
 
-    // Index data.
-    // unsigned int indices[] =
-    // {
-    //     0, 1, 2,
-    //     0, 2, 3,
-    // };
-
     // Generate buffers.
     unsigned int vb, va;
-    // unsigned int ib;
     glGenBuffers(1, &vb);
-    // glGenBuffers(1, &ib);
     glGenVertexArrays(1, &va);
 
     // Copy vertex buffer data.
     glBindBuffer(GL_ARRAY_BUFFER, vb);
     glBufferData(GL_ARRAY_BUFFER, 36 * 5 * sizeof(float), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Copy index buffer data.
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // Pack vertex buffer and vertex buffer layout into vertex array object.
     glBindVertexArray(va);
@@ -150,7 +136,7 @@ int main()
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
-    
+    // Shader
     Shader* shader = new Shader(SHADER_PATH);
     shader->Bind();
 
@@ -162,7 +148,7 @@ int main()
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int imgWidth, imgHeight, nrChannels;
@@ -180,25 +166,13 @@ int main()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    shader->SetUniform("u_texture", 0); // Send the texture bounded to slot=0 to the u_texture uniform.
+    // Send the texture bounded to slot=0 to the u_texture uniform.
+    shader->SetUniform("u_texture", 0); 
 
     
     // Tranformations
-    glm::mat4 model = glm::mat4(1.0f);
-
-    // Create a view matix manually.
-    // glm::mat4 view = glm::mat4(1.0f);
-    // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.f));   // Push the camera back (towards me)
-
-    // Create a view matix using glm's LookAt function.
-    // glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    // glm::mat4 view = glm::lookAt(cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-    glm::mat4 projection;
-    projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-
-    // shader->SetUniform("u_model", model);
-    // shader->SetUniform("u_view", view);
+    glm::mat4 projection = glm::perspective(
+        glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     shader->SetUniform("u_projection", projection);
 
     glm::vec3 cubePositions[] = {
@@ -224,35 +198,21 @@ int main()
 
         // Render.
         glBindVertexArray(va);
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-        // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        // model = glm::rotate(model, (float)glfwGetTime()/1000 * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-        // shader->SetUniform("u_model", model);
-
-        // Change camera position each frame
-        // float time = (float)glfwGetTime();
-        float time = glm::mod((float)glfwGetTime(), 360.f);
-        float radius = 10.0f;
-        // Move the camera in yz plane over time.
-        glm::vec3 cameraPos = glm::vec3(radius * cos(time), 0.0f, radius * sin(time));
-        // glm::mat4 view = glm::lookAt(cameraPos, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.0f, 1.0f, 0.0f));
         
-        // Use my implementation of LookAt matrix.
-        glm::mat4 view = LookAt(cameraPos, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 3.f);
+        glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
+        glm::vec3 upVector = glm::vec3(0.f, 1.f, 0.f);
+        glm::mat4 view = LookAt(cameraPos, cameraPos + cameraFront, upVector);
         shader->SetUniform("u_view", view);
 
         for (int i = 0; i < 10; i++)
         {
-            // Create a different model matirix each time (for 10 times)
-            // And issule a draw call using that model matirx. Thus we can
-            // Draw the cube in 10 different places in the world in a single
-            // game loop (As all these are done in a single iteration of the
-            // externanl while loop).
-            model = glm::mat4(1.0f);
+            // Draw 10 cubes in different places in the world (Using different
+            // model matrix for each one).
+            glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             float angle = glm::radians((float)glfwGetTime()/5 * (i + 1) * 20.0f);
-            model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+            model = glm::rotate(model, angle, glm::normalize(glm::vec3(1.0f, 0.3f, 0.5f)));
             
             shader->SetUniform("u_model", model);
             

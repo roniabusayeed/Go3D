@@ -23,6 +23,25 @@
 
 void ProcessInput(GLFWwindow* window);
 
+glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector)
+{
+    glm::vec3 camZ = glm::normalize(cameraPos - cameraTarget);
+    glm::vec3 camX = glm::normalize(glm::cross(upVector, camZ));
+    glm::vec3 camY = glm::cross(camZ, camX);
+
+    glm::mat4 I = glm::mat4(1.0f);
+
+    glm::mat4 translate = glm::translate(I, -cameraPos);
+    glm::mat4 rotate = glm::transpose(glm::mat4(
+                                 glm::vec4(camX, 0.f),
+                                 glm::vec4(camY, 0.f),
+                                 glm::vec4(camZ, 0.f),
+                                 glm::vec4(glm::vec3(0.f, 0.f, 0.f), 1.f)
+    ));
+   
+    return rotate * translate;
+}
+
 int main()
 {
     // Initialize GLFW library.
@@ -217,7 +236,10 @@ int main()
         float radius = 10.0f;
         // Move the camera in yz plane over time.
         glm::vec3 cameraPos = glm::vec3(radius * cos(time), 0.0f, radius * sin(time));
-        glm::mat4 view = glm::lookAt(cameraPos, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.0f, 1.0f, 0.0f));
+        // glm::mat4 view = glm::lookAt(cameraPos, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.0f, 1.0f, 0.0f));
+        
+        // Use my implementation of LookAt matrix.
+        glm::mat4 view = LookAt(cameraPos, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.0f, 1.0f, 0.0f));
         shader->SetUniform("u_view", view);
 
         for (int i = 0; i < 10; i++)

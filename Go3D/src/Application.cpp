@@ -22,32 +22,21 @@
 
 
 void ProcessInput(GLFWwindow* window);
-
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
+glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector);
+
 static Shader* shader = nullptr;
 
+// Camera setup.
 static glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 3.f);
 static glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
 static glm::vec3 upVector = glm::vec3(0.f, 1.f, 0.f);
 
-glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector)
-{
-    glm::vec3 camZ = glm::normalize(cameraPos - cameraTarget);
-    glm::vec3 camX = glm::normalize(glm::cross(upVector, camZ));
-    glm::vec3 camY = glm::cross(camZ, camX);
+// Delta time.
+static float lastFrameTime = 0.f;
+static float deltaTime = 0.f;
+static void updateDeltaTime();
 
-    glm::mat4 I = glm::mat4(1.0f);
-
-    glm::mat4 translate = glm::translate(I, -cameraPos);
-    glm::mat4 rotate = glm::transpose(glm::mat4(
-                                 glm::vec4(camX, 0.f),
-                                 glm::vec4(camY, 0.f),
-                                 glm::vec4(camZ, 0.f),
-                                 glm::vec4(glm::vec3(0.f, 0.f, 0.f), 1.f)
-    ));
-   
-    return rotate * translate;
-}
 
 int main()
 {
@@ -204,6 +193,7 @@ int main()
     // Render loop.
     while (!glfwWindowShouldClose(window))
     {
+        updateDeltaTime();
         ProcessInput(window);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -248,7 +238,7 @@ void ProcessInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 
     // Camera controller.
-    const float cameraSpeed = .05f;
+    const float cameraSpeed = 5.f * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cameraPos += cameraFront * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -268,4 +258,30 @@ void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
     // changed as this function is called by glfw.
     glm::mat4 projection = glm::perspective(glm::radians(45.f), (float)width / (float)height, 0.1f, 100.f);
     shader->SetUniform("u_projection", projection);
+}
+
+glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector)
+{
+    glm::vec3 camZ = glm::normalize(cameraPos - cameraTarget);
+    glm::vec3 camX = glm::normalize(glm::cross(upVector, camZ));
+    glm::vec3 camY = glm::cross(camZ, camX);
+
+    glm::mat4 I = glm::mat4(1.0f);
+
+    glm::mat4 translate = glm::translate(I, -cameraPos);
+    glm::mat4 rotate = glm::transpose(glm::mat4(
+        glm::vec4(camX, 0.f),
+        glm::vec4(camY, 0.f),
+        glm::vec4(camZ, 0.f),
+        glm::vec4(glm::vec3(0.f, 0.f, 0.f), 1.f)
+    ));
+
+    return rotate * translate;
+}
+
+void updateDeltaTime()
+{
+    float currentTime = (float)glfwGetTime();
+    deltaTime = currentTime - lastFrameTime;
+    lastFrameTime = currentTime;
 }

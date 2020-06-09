@@ -23,6 +23,9 @@
 
 void ProcessInput(GLFWwindow* window);
 
+void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
+static Shader* shader = nullptr;
+
 glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector)
 {
     glm::vec3 camZ = glm::normalize(cameraPos - cameraTarget);
@@ -60,8 +63,12 @@ int main()
         glfwTerminate();
         return -1;
     }
+
+    // Make context current.
     glfwMakeContextCurrent(window);
 
+    // Set callbacks and swap interval.
+    glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback);
     glfwSwapInterval(1);
 
     // Initialize glad.
@@ -137,7 +144,7 @@ int main()
     glBindVertexArray(0);
 
     // Shader
-    Shader* shader = new Shader(SHADER_PATH);
+    shader = new Shader(SHADER_PATH);
     shader->Bind();
 
     
@@ -237,4 +244,14 @@ void ProcessInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+}
+
+void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+    
+    // Adjust projection matrix's aspect ratio, since it's (most probably)
+    // changed as this function is called by glfw.
+    glm::mat4 projection = glm::perspective(glm::radians(45.f), (float)width / (float)height, 0.1f, 100.f);
+    shader->SetUniform("u_projection", projection);
 }

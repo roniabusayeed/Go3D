@@ -23,6 +23,8 @@
 
 void ProcessInput(GLFWwindow* window);
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
+void mouseCallback(GLFWwindow* window, double xPos, double yPos);
+void scrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector);
 
 static Shader* shader = nullptr;
@@ -31,6 +33,9 @@ static Shader* shader = nullptr;
 static glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 3.f);
 static glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
 static glm::vec3 upVector = glm::vec3(0.f, 1.f, 0.f);
+
+// Field of view for projection matrix.
+static float fov = 45.0f;
 
 // Delta time.
 static float lastFrameTime = 0.f;
@@ -49,6 +54,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+  
     // Create window and OpenGL Context.
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Go3D", nullptr, nullptr);
     if (!window)
@@ -57,11 +63,16 @@ int main()
         return -1;
     }
 
+    // Hide the cursor and capture it.
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    // Set callbacks.
+    glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
+    
     // Make context current.
     glfwMakeContextCurrent(window);
-
-    // Set callbacks and swap interval.
-    glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback);
     glfwSwapInterval(1);
 
     // Initialize glad.
@@ -172,7 +183,7 @@ int main()
     
     // Tranformations
     glm::mat4 projection = glm::perspective(
-        glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     shader->SetUniform("u_projection", projection);
 
     glm::vec3 cubePositions[] = {
@@ -200,7 +211,7 @@ int main()
         // Render.
         glBindVertexArray(va);
         
-        
+        // Update view/camera each frame.
         glm::mat4 view = LookAt(cameraPos, cameraPos + cameraFront, upVector);
         shader->SetUniform("u_view", view);
 
@@ -247,7 +258,6 @@ void ProcessInput(GLFWwindow* window)
         cameraPos += -glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         cameraPos += glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
-        
 }
 
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
@@ -256,8 +266,75 @@ void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
     
     // Adjust projection matrix's aspect ratio, since it's (most probably)
     // changed as this function is called by glfw.
-    glm::mat4 projection = glm::perspective(glm::radians(45.f), (float)width / (float)height, 0.1f, 100.f);
+    glm::mat4 projection = glm::perspective(glm::radians(fov), (float)width / (float)height, 0.1f, 100.f);
     shader->SetUniform("u_projection", projection);
+}
+
+/**
+ *  When the mouse moves, change the camera target by changing cameraFront vector.
+ */
+void mouseCallback(GLFWwindow* window, double xPos, double yPos)
+{
+    static bool firstUse = true;
+    static double lastX = SCR_WIDTH / 2;
+    static double lastY = SCR_HEIGHT / 2;
+    if (firstUse)
+    {
+        lastX = xPos;
+        lastY = yPos;
+        firstUse = false;
+    }
+
+    float xOffset = xPos - lastX;
+    float yOffset = lastY - yPos;
+    lastX = xPos;
+    lastY = yPos;
+
+    float sensitivity = 0.1f;
+    xOffset *= sensitivity;
+    yOffset *= sensitivity;
+
+    static float yaw    = -90.0f;   // yaw is initialized to -90 deg since a yaw of zero results in a direction verctor pointing to the right. So we initially rotate a bit to the left.
+    static float pitch  =  0.0f;
+    yaw += xOffset;
+    pitch += yOffset;
+
+    // Constraints.
+    if (pitch > 89)
+        pitch = 89;
+    if (pitch < -89)
+        pitch = -89;
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+    cameraFront = direction;
+}
+
+void scrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+{
+    float zoomSensitivity = 1.5f;
+
+    static float lastZoom = fov;
+    float zoom = lastZoom - float(yOffset) * zoomSensitivity;
+
+    // Zoom constraints.
+    if (zoom > 45)
+        zoom = 45;
+    if (zoom < 1)
+        zoom = 1;
+
+    lastZoom = zoom;
+    // Update projection matrix and push it to the shader.
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glm::mat4 projection = glm::perspective(glm::radians(zoom), float(width) / (float)height, 0.1f, 100.0f);
+    shader->SetUniform("u_projection", projection);
+
+    // update global fov.
+    fov = zoom;
 }
 
 glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector)

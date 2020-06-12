@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+#include "Camera.h"
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
@@ -23,22 +23,13 @@
 
 void ProcessInput(GLFWwindow* window);
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
-void mouseCallback(GLFWwindow* window, double xPos, double yPos);
-void scrollCallback(GLFWwindow* window, double xOffset, double yOffset);
-glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector);
+void MouseCallback(GLFWwindow* window, double xPos, double yPos);
+void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 
 static Shader* shader = nullptr;
-
-// Camera setup.
-static glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 3.f);
-static glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
-static glm::vec3 upVector = glm::vec3(0.f, 1.f, 0.f);
-
-// Field of view for projection matrix.
-static float fov = 45.0f;
+static Camera* camera = nullptr;
 
 // Delta time.
-static float lastFrameTime = 0.f;
 static float deltaTime = 0.f;
 static void updateDeltaTime();
 
@@ -68,8 +59,8 @@ int main()
 
     // Set callbacks.
     glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);
+    glfwSetCursorPosCallback(window, MouseCallback);
+    glfwSetScrollCallback(window, ScrollCallback);
     
     // Make context current.
     glfwMakeContextCurrent(window);
@@ -165,8 +156,7 @@ int main()
     int imgWidth, imgHeight, nrChannels;
     stbi_set_flip_vertically_on_load(true);
     unsigned char* textureData = stbi_load(TEXTURE_PATH, &imgWidth, &imgHeight, &nrChannels, 0);
-    if (!textureData)
-        __debugbreak();
+    ASSERT(textureData);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -180,26 +170,32 @@ int main()
     // Send the texture bounded to slot=0 to the u_texture uniform.
     shader->SetUniform("u_texture", 0); 
 
-    
-    // Tranformations
-    glm::mat4 projection = glm::perspective(
-        glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    shader->SetUniform("u_projection", projection);
+
 
     glm::vec3 cubePositions[] = {
-    glm::vec3(0.0f,  0.0f,  0.0f),
-    glm::vec3(2.0f,  5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
-    glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3(2.4f, -0.4f, -3.5f),
-    glm::vec3(-1.7f,  3.0f, -7.5f),
-    glm::vec3(1.3f, -2.0f, -2.5f),
-    glm::vec3(1.5f,  2.0f, -2.5f),
-    glm::vec3(1.5f,  0.2f, -1.5f),
-    glm::vec3(-1.3f,  1.0f, -1.5f)
+        glm::vec3(0.0f,  0.0f,  0.0f),
+        glm::vec3(2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f,  2.0f, -2.5f),
+        glm::vec3(1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
+    // Enable depth testing.
     glEnable(GL_DEPTH_TEST);
+
+    // Camera.
+    camera =  new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
+
+    // Default projection matrix.
+    glm::mat4 projection = glm::perspective(glm::radians(camera->Fov),
+        float(SCR_WIDTH) / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    shader->SetUniform("u_projection", projection);
+
 
     // Render loop.
     while (!glfwWindowShouldClose(window))
@@ -212,7 +208,7 @@ int main()
         glBindVertexArray(va);
         
         // Update view/camera each frame.
-        glm::mat4 view = LookAt(cameraPos, cameraPos + cameraFront, upVector);
+        glm::mat4 view = camera->GetViewMatrix();
         shader->SetUniform("u_view", view);
 
         for (int i = 0; i < 10; i++)
@@ -236,45 +232,45 @@ int main()
 
     // Clean up.
     glDeleteBuffers(1, &vb);
-    // glDeleteBuffers(1, &ib);
     glDeleteVertexArrays(1, &va);
     glDeleteTextures(1, &texture);
     delete shader;
+    delete camera;
     glfwTerminate();
 }
 
 void ProcessInput(GLFWwindow* window)
 {
+    // Close the application using escape key.
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    // Camera controller.
-    const float cameraSpeed = 5.f * deltaTime;
+    // Move the camera around using keyboard.
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraFront * cameraSpeed;
+        camera->ProcessKeyboard(Camera::CameraDirection::FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos += -cameraFront * cameraSpeed;
+        camera->ProcessKeyboard(Camera::CameraDirection::BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos += -glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
+        camera->ProcessKeyboard(Camera::CameraDirection::LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
+        camera->ProcessKeyboard(Camera::CameraDirection::RIGHT, deltaTime);
 }
 
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
+    // Adjust viewport to frame buffer size.
     glViewport(0, 0, width, height);
     
     // Adjust projection matrix's aspect ratio, since it's (most probably)
     // changed as this function is called by glfw.
-    glm::mat4 projection = glm::perspective(glm::radians(fov), (float)width / (float)height, 0.1f, 100.f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera->Fov), (float)width / (float)height, 0.1f, 100.f);
     shader->SetUniform("u_projection", projection);
 }
 
-/**
- *  When the mouse moves, change the camera target by changing cameraFront vector.
- */
-void mouseCallback(GLFWwindow* window, double xPos, double yPos)
+
+void MouseCallback(GLFWwindow* window, double xPos, double yPos)
 {
+    // Get x and y offsets of mouse movement since last time these offsets were calculated.
     static bool firstUse = true;
     static double lastX = SCR_WIDTH / 2;
     static double lastY = SCR_HEIGHT / 2;
@@ -290,74 +286,27 @@ void mouseCallback(GLFWwindow* window, double xPos, double yPos)
     lastX = xPos;
     lastY = yPos;
 
-    float sensitivity = 0.1f;
-    xOffset *= sensitivity;
-    yOffset *= sensitivity;
-
-    static float yaw    = -90.0f;   // yaw is initialized to -90 deg since a yaw of zero results in a direction verctor pointing to the right. So we initially rotate a bit to the left.
-    static float pitch  =  0.0f;
-    yaw += xOffset;
-    pitch += yOffset;
-
-    // Constraints.
-    if (pitch > 89)
-        pitch = 89;
-    if (pitch < -89)
-        pitch = -89;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-
-    cameraFront = direction;
+    // Recalculate camera direction using these offsets.
+    camera->ProcessMouseMovement(xOffset, yOffset);
 }
 
-void scrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 {
-    float zoomSensitivity = 1.5f;
+    // Update camera Fov.
+    camera->ProcessMouseScroll(yOffset);
 
-    static float lastZoom = fov;
-    float zoom = lastZoom - float(yOffset) * zoomSensitivity;
-
-    // Zoom constraints.
-    if (zoom > 45)
-        zoom = 45;
-    if (zoom < 1)
-        zoom = 1;
-
-    lastZoom = zoom;
-    // Update projection matrix and push it to the shader.
+    // Calculate aspect ratio.
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    glm::mat4 projection = glm::perspective(glm::radians(zoom), float(width) / (float)height, 0.1f, 100.0f);
+    
+    glm::mat4 projection = glm::perspective(glm::radians(camera->Fov),
+        (float)width/(float)height, 0.1f, 100.0f);
     shader->SetUniform("u_projection", projection);
-
-    // update global fov.
-    fov = zoom;
-}
-
-glm::mat4 LookAt(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 upVector)
-{
-    glm::vec3 camZ = glm::normalize(cameraPos - cameraTarget);
-    glm::vec3 camX = glm::normalize(glm::cross(upVector, camZ));
-    glm::vec3 camY = glm::cross(camZ, camX);
-
-    glm::mat4 I = glm::mat4(1.0f);
-
-    glm::mat4 translate = glm::translate(I, -cameraPos);
-    glm::mat4 rotate = glm::transpose(glm::mat4(
-        glm::vec4(camX, 0.f),
-        glm::vec4(camY, 0.f),
-        glm::vec4(camZ, 0.f),
-        glm::vec4(glm::vec3(0.f, 0.f, 0.f), 1.f)
-    ));
-
-    return rotate * translate;
 }
 
 void updateDeltaTime()
 {
+    static float lastFrameTime = 0.0f;
     float currentTime = (float)glfwGetTime();
     deltaTime = currentTime - lastFrameTime;
     lastFrameTime = currentTime;

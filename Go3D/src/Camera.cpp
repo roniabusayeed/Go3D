@@ -76,6 +76,9 @@ void Camera::ProcessKeyboard(CameraDirection direction, double deltaTime)
         cameraPos -= glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
     if (direction == CameraDirection::RIGHT)
         cameraPos += glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
+
+    // Since a true FPS camera cannot fly, restrict the camera on zx (ground) plane.
+    cameraPos.y = 0.0f;
 }
 
 glm::mat4 Camera::GetViewMatrix() const

@@ -13,24 +13,27 @@ private:
     float cameraSpeed;      // How fast the camera can move around the scene
     float sensitivity;      // How fast the camera can change direction.
     float zoomSensitivity;  // How fast the camera can zoom in/out of something.
-    
+    float boostFactor;
+
     double yaw;             // Euler anlge: Yaw
     double pitch;           // Euler angle: Pitch
 public:
     float Fov;              // Field of view.
 public: 
-    enum class CameraDirection
+    enum class CameraMovement
     {
         FORWARD,
         BACKWARD,
         LEFT,
         RIGHT,
+
+        BOOST,
     };
 public:
     Camera(const glm::vec3& cameraPos);
     void ProcessMouseMovement(double xOffset, double yOffset);
     void ProcessMouseScroll(double yOffset);
-    void ProcessKeyboard(CameraDirection direction, double deltaTime);
+    void ProcessKeyboard(CameraMovement movement, double deltaTime);
     glm::mat4 GetViewMatrix()const;
     void SetCameraSpeed(float speed);
     void SetSensitivity(float sensitivity);

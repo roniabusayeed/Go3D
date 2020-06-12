@@ -10,13 +10,14 @@ Camera::Camera(const glm::vec3& cameraPos)
       cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)),
       upVector(glm::vec3(0.0f, 1.0f, 0.0f))
 {
-    cameraSpeed = 2.5f;         // Defualt camera Speed.
-    sensitivity = 0.1f;         // Default camera sensitivity.
-    zoomSensitivity = 0.5f;     // Default camera zoom sensitivity.
+    cameraSpeed     =   2.5f;     // Defualt camera Speed.
+    sensitivity     =   0.1f;     // Default camera sensitivity.
+    zoomSensitivity =   0.5f;     // Default camera zoom sensitivity.
+    boostFactor     =   2.0f;     // Defualt camera boost fractor.
 
     // Euler angles
     yaw = -90.f;                // yaw is initialized to -90 deg since a yaw of zero results
-                                // in a direction verctor pointing to the right. So we initially
+                                // in a movement verctor pointing to the right. So we initially
                                 // rotate a bit to the left.
     pitch = 0.0f;
 
@@ -35,7 +36,7 @@ void Camera::ProcessMouseMovement(double xOffset, double yOffset)
     if (pitch < -89)
         pitch = -89;
 
-    // Calculate camera direction using Euler angles.
+    // Calculate camera movement using Euler angles.
     glm::vec3 direction;
     direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
     direction.y = sin(glm::radians(pitch));
@@ -63,19 +64,34 @@ void Camera::ProcessMouseScroll(double yOffset)
         Fov = 1;
 }
 
-void Camera::ProcessKeyboard(CameraDirection direction, double deltaTime)
-{
-    float cameraSpeed = 2.5f * deltaTime;   // Make the speed consistant accross all hardware
-                                            // using delta time.
-    
-    if (direction == CameraDirection::FORWARD)
-        cameraPos += cameraFront * cameraSpeed;
-    if (direction == CameraDirection::BACKWARD)
-        cameraPos -= cameraFront * cameraSpeed;
-    if (direction == CameraDirection::LEFT)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
-    if (direction == CameraDirection::RIGHT)
-        cameraPos += glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed;
+void Camera::ProcessKeyboard(CameraMovement movement, double deltaTime)
+{    
+    if (movement == CameraMovement::FORWARD)
+        cameraPos += cameraFront * cameraSpeed * (float)deltaTime;
+    if (movement == CameraMovement::BACKWARD)
+        cameraPos -= cameraFront * cameraSpeed * (float)deltaTime;
+    if (movement == CameraMovement::LEFT)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed * (float)deltaTime;
+    if (movement == CameraMovement::RIGHT)
+        cameraPos += glm::normalize(glm::cross(cameraFront, upVector)) * cameraSpeed * (float)deltaTime;
+
+    static bool boosted = false;
+    if (movement == CameraMovement::BOOST)
+    {
+        if (!boosted)
+        {
+            cameraSpeed *= boostFactor;
+            boosted = true;
+        }
+    }
+    else
+    {
+        if (boosted)
+        {
+            cameraSpeed /= boostFactor;
+            boosted = false;
+        }
+    }
 
     // Since a true FPS camera cannot fly, restrict the camera on zx (ground) plane.
     cameraPos.y = 0.0f;

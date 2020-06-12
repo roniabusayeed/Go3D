@@ -247,13 +247,16 @@ void ProcessInput(GLFWwindow* window)
 
     // Move the camera around using keyboard.
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera->ProcessKeyboard(Camera::CameraDirection::FORWARD, deltaTime);
+        camera->ProcessKeyboard(Camera::CameraMovement::FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera->ProcessKeyboard(Camera::CameraDirection::BACKWARD, deltaTime);
+        camera->ProcessKeyboard(Camera::CameraMovement::BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera->ProcessKeyboard(Camera::CameraDirection::LEFT, deltaTime);
+        camera->ProcessKeyboard(Camera::CameraMovement::LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera->ProcessKeyboard(Camera::CameraDirection::RIGHT, deltaTime);
+        camera->ProcessKeyboard(Camera::CameraMovement::RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera::CameraMovement::BOOST, deltaTime);
 }
 
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height)

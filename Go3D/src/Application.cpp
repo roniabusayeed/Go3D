@@ -1,15 +1,16 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include "Shader.h"
-#include "vendor/stb_image.h"
-#include "DebugUtils.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "Camera.h"
 #include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 #include "VertexArray.h"
+#include "Shader.h"
+#include "Texture.h"
+#include "Camera.h"
+#include "DebugUtils.h"
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
@@ -133,33 +134,20 @@ int main()
     shader->Bind();
 
     // Texture
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int imgWidth, imgHeight, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char* textureData = stbi_load(TEXTURE_PATH, &imgWidth, &imgHeight, &nrChannels, 0);
-    ASSERT(textureData);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    stbi_image_free(textureData);
-
-    // Bind the texture to texture slot=0
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    Texture* texture = new Texture(TEXTURE_PATH);
+    texture->Bind(0);   // Bind the texture to slot = 0.
 
     // Send the texture bounded to slot=0 to the u_texture uniform.
     shader->SetUniform("u_texture", 0); 
 
 
+    // Camera.
+    camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
+
+    // Default projection matrix.
+    glm::mat4 projection = glm::perspective(glm::radians(camera->Fov),
+        float(SCR_WIDTH) / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    shader->SetUniform("u_projection", projection);
 
     glm::vec3 cubePositions[] = {
         glm::vec3(0.0f,  0.0f,  0.0f),
@@ -173,18 +161,9 @@ int main()
         glm::vec3(1.5f,  0.2f, -1.5f),
         glm::vec3(-1.3f,  1.0f, -1.5f)
     };
-
+    
     // Enable depth testing.
     glEnable(GL_DEPTH_TEST);
-
-    // Camera.
-    camera =  new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
-
-    // Default projection matrix.
-    glm::mat4 projection = glm::perspective(glm::radians(camera->Fov),
-        float(SCR_WIDTH) / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    shader->SetUniform("u_projection", projection);
-
 
     // Render loop.
     while (!glfwWindowShouldClose(window))
@@ -222,7 +201,7 @@ int main()
     delete vb;
     delete layout;
     delete va;
-    glDeleteTextures(1, &texture);
+    delete texture;
     delete shader;
     delete camera;
     glfwTerminate();
@@ -258,7 +237,6 @@ void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
     glm::mat4 projection = glm::perspective(glm::radians(camera->Fov), (float)width / (float)height, 0.1f, 100.f);
     shader->SetUniform("u_projection", projection);
 }
-
 
 void MouseCallback(GLFWwindow* window, double xPos, double yPos)
 {

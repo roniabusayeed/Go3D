@@ -8,7 +8,7 @@ struct Attribute
 {
     size_t Count;
     unsigned int Type;
-    unsigned int Normalized;
+    unsigned char Normalized;
 
     inline static size_t GetSizeOfType(unsigned int type)
     {
@@ -49,4 +49,3 @@ public:
 
     // Add support for more attribute field types.
 };
-

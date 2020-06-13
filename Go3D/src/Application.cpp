@@ -9,6 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Camera.h"
 #include "VertexBuffer.h"
+#include "VertexArray.h"
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
@@ -121,25 +122,16 @@ int main()
     };
 
     // Generate buffers.
-    unsigned int va;
-    glGenVertexArrays(1, &va);
-
     VertexBuffer* vb = new VertexBuffer(vertices, 36 * 5 * sizeof(float));
-
-    // Pack vertex buffer and vertex buffer layout into vertex array object.
-    glBindVertexArray(va);
-    vb->Bind();
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (const void*)0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (const void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glBindVertexArray(0);
+    VertexBufferLayout* layout = new VertexBufferLayout();
+    layout->Push<float>(3);
+    layout->Push<float>(2);
+    VertexArray* va = new VertexArray(*vb, *layout);
 
     // Shader
     shader = new Shader(SHADER_PATH);
     shader->Bind();
 
-    
     // Texture
     unsigned int texture;
     glGenTextures(1, &texture);
@@ -202,7 +194,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render.
-        glBindVertexArray(va);
+        va->Bind();
         
         // Update view/camera each frame.
         glm::mat4 view = camera->GetViewMatrix();
@@ -218,7 +210,6 @@ int main()
             model = glm::rotate(model, angle, glm::normalize(glm::vec3(1.0f, 0.3f, 0.5f)));
             
             shader->SetUniform("u_model", model);
-            
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
@@ -229,7 +220,8 @@ int main()
 
     // Clean up.
     delete vb;
-    glDeleteVertexArrays(1, &va);
+    delete layout;
+    delete va;
     glDeleteTextures(1, &texture);
     delete shader;
     delete camera;

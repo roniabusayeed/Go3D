@@ -11,6 +11,7 @@
 #include "Texture.h"
 #include "Camera.h"
 #include "DebugUtils.h"
+#include "Renderer.h"
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
@@ -29,8 +30,15 @@ void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xPos, double yPos);
 void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 
-static Shader* shader = nullptr;
-static Camera* camera = nullptr;
+static Shader* objectShader = nullptr;
+static Shader* lightSourceShader = nullptr;
+
+static glm::vec3 lightSourcePos = glm::vec3(1.2f, 1.0f, 1.5f);
+static glm::vec3 initialCameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
+
+static Camera* camera = new Camera(initialCameraPos);
+
+Renderer renderer;
 
 // Delta time.
 static float deltaTime = 0.f;
@@ -123,45 +131,39 @@ int main()
     };
 
     // Generate buffers.
-    VertexBuffer* vb = new VertexBuffer(vertices, 36 * 5 * sizeof(float));
+    VertexBuffer* vb = new VertexBuffer(vertices, sizeof(float) * 5 * 36);
     VertexBufferLayout* layout = new VertexBufferLayout();
     layout->Push<float>(3);
     layout->Push<float>(2);
-    VertexArray* va = new VertexArray(*vb, *layout);
 
-    // Shader
-    shader = new Shader(SHADER_PATH);
-    shader->Bind();
+    VertexArray* objectVA = new VertexArray(*vb, *layout);
+    VertexArray* lightSourceVA = new VertexArray(*vb, *layout);
 
-    // Texture
-    Texture* texture = new Texture(TEXTURE_PATH);
-    texture->Bind(0);   // Bind the texture to slot = 0.
+    // Shaders
+    objectShader = new Shader("res/shaders/object.shader");
+    lightSourceShader = new Shader("res/shaders/lightSource.shader");
 
-    // Send the texture bounded to slot=0 to the u_texture uniform.
-    shader->SetUniform("u_texture", 0); 
+    // Set up the object.
+    glm::mat4 objectModel = glm::mat4(1.0f);
+    objectShader->Bind();
+    objectShader->SetUniform("u_model", objectModel);
+
+    // Set up the light source
+    glm::mat4 lightSourceModel = glm::mat4(1.0f);
+    lightSourceModel = glm::translate(lightSourceModel, lightSourcePos);
+    lightSourceModel = glm::scale(lightSourceModel, glm::vec3(0.2f));
+    lightSourceShader->Bind();
+    lightSourceShader->SetUniform("u_model", lightSourceModel);
 
 
-    // Camera.
-    camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
-
-    // Default projection matrix.
+    // Initial projection matrix.
     glm::mat4 projection = glm::perspective(glm::radians(camera->Fov),
         float(SCR_WIDTH) / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    shader->SetUniform("u_projection", projection);
+    objectShader->Bind();
+    objectShader->SetUniform("u_projection", projection);
+    lightSourceShader->Bind();
+    lightSourceShader->SetUniform("u_projection", projection);
 
-    glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f,  0.0f,  0.0f),
-        glm::vec3(2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f,  2.0f, -2.5f),
-        glm::vec3(1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
-    
     // Enable depth testing.
     glEnable(GL_DEPTH_TEST);
 
@@ -172,25 +174,17 @@ int main()
         ProcessInput(window);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render.
-        va->Bind();
         
         // Update view/camera each frame.
         glm::mat4 view = camera->GetViewMatrix();
-        shader->SetUniform("u_view", view);
+        objectShader->Bind();
+        objectShader->SetUniform("u_view", view);
+        lightSourceShader->Bind();
+        lightSourceShader->SetUniform("u_view", view);
 
-        for (int i = 0; i < 10; i++)
-        {
-            // Draw 10 cubes in different places in the world (Using different
-            // model matrix for each one).
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = glm::radians((float)glfwGetTime()/5 * (i + 1) * 20.0f);
-            model = glm::rotate(model, angle, glm::normalize(glm::vec3(1.0f, 0.3f, 0.5f)));
-            
-            shader->SetUniform("u_model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        // Render the object.
+        renderer.Draw(*objectVA, *objectShader);
+        renderer.Draw(*lightSourceVA, *lightSourceShader);
 
         // Swap buffers and poll input events.
         glfwSwapBuffers(window);
@@ -198,12 +192,7 @@ int main()
     }
 
     // Clean up.
-    delete vb;
-    delete layout;
-    delete va;
-    delete texture;
-    delete shader;
-    delete camera;
+    // TODO: Clean up all heap allocated objects.
     glfwTerminate();
 }
 
@@ -235,7 +224,10 @@ void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
     // Adjust projection matrix's aspect ratio, since it's (most probably)
     // changed as this function is called by glfw.
     glm::mat4 projection = glm::perspective(glm::radians(camera->Fov), (float)width / (float)height, 0.1f, 100.f);
-    shader->SetUniform("u_projection", projection);
+    objectShader->Bind();
+    objectShader->SetUniform("u_projection", projection);
+    lightSourceShader->Bind();
+    lightSourceShader->SetUniform("u_projection", projection);
 }
 
 void MouseCallback(GLFWwindow* window, double xPos, double yPos)
@@ -271,7 +263,10 @@ void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
     
     glm::mat4 projection = glm::perspective(glm::radians(camera->Fov),
         (float)width/(float)height, 0.1f, 100.0f);
-    shader->SetUniform("u_projection", projection);
+    objectShader->Bind();
+    objectShader->SetUniform("u_projection", projection);
+    lightSourceShader->Bind();
+    lightSourceShader->SetUniform("u_projection", projection);
 }
 
 void updateDeltaTime()

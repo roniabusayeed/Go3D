@@ -73,12 +73,22 @@ void Shader::SetUniform(const std::string& uniformName, float value)
         ASSERT(false);  // Invalid uniform name.
 }
 
-void Shader::SetUniform(const std::string& uniformName, const glm::mat4& trans)
+void Shader::SetUniform(const std::string& uniformName, const glm::mat4& matrix)
 {
     int location = GetUniformLocation(uniformName);
     if (location != -1)
     {
-        GLCall(glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(trans)));
+        GLCall(glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix)));
+    }
+    else ASSERT(false);     // Invalid uniform name.
+}
+
+void Shader::SetUniform(const std::string& uniformName, const glm::vec3& vector)
+{
+    int location = GetUniformLocation(uniformName);
+    if (location != -1)
+    {
+        GLCall(glUniform3f(location, vector.x, vector.y, vector.z));
     }
     else ASSERT(false);     // Invalid uniform name.
 }

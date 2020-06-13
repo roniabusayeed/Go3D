@@ -182,6 +182,11 @@ int main()
         lightSourceShader->Bind();
         lightSourceShader->SetUniform("u_view", view);
 
+        // Set the colors to the object.
+        objectShader->Bind();
+        objectShader->SetUniform("u_objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+        objectShader->SetUniform("u_lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
         // Render the object.
         renderer.Draw(*objectVA, *objectShader);
         renderer.Draw(*lightSourceVA, *lightSourceShader);

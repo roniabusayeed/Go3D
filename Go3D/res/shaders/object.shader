@@ -24,8 +24,11 @@ out vec4 fragColor;
 
 uniform sampler2D u_texture;
 
+uniform vec3 u_objectColor;
+uniform vec3 u_lightColor;
+
 void main()
 {
     // fragColor = texture(u_texture, v_textureCoord);
-    fragColor = vec4(1.0f, 1.0f, 5.0f, 1.0f);
+    fragColor = vec4(u_objectColor * u_lightColor, 1.0f);
 }

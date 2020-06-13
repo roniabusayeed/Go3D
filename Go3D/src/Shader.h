@@ -25,7 +25,8 @@ public:
 
     void SetUniform(const std::string& uniformName, int value);
     void SetUniform(const std::string& uniformName, float value);
-    void SetUniform(const std::string& uniformName, const glm::mat4& trans);
+    void SetUniform(const std::string& uniformName, const glm::mat4& matrix);
+    void SetUniform(const std::string& uniformName, const glm::vec3& vector);
 private:
     static ShaderSource ParseShader(const std::string& filePath);
     static unsigned int CompileShader(unsigned int type, const std::string& source);

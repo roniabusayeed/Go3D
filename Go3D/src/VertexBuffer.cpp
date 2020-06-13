@@ -3,6 +3,7 @@
 #include "DebugUtils.h"
 
 VertexBuffer::VertexBuffer(const void* data, size_t size)
+    : size(size)
 {
     GLCall(glGenBuffers(1, &id));
     GLCall(glBindBuffer(GL_ARRAY_BUFFER, id));

@@ -4,6 +4,8 @@
 
 VertexArray::VertexArray(const VertexBuffer& vb, const VertexBufferLayout& layout)
 {
+    vertexCount = vb.GetSize() / layout.GetStride();
+
     GLCall(glGenVertexArrays(1, &id));
     GLCall(glBindVertexArray(id));
     vb.Bind();

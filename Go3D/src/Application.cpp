@@ -142,7 +142,7 @@ int main()
 
 
     // Camera.
-    camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
+    camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
     // Default projection matrix.
     glm::mat4 projection = glm::perspective(glm::radians(camera->Fov),
@@ -242,8 +242,8 @@ void MouseCallback(GLFWwindow* window, double xPos, double yPos)
 {
     // Get x and y offsets of mouse movement since last time these offsets were calculated.
     static bool firstUse = true;
-    static double lastX = SCR_WIDTH / 2;
-    static double lastY = SCR_HEIGHT / 2;
+    static double lastX;
+    static double lastY;
     if (firstUse)
     {
         lastX = xPos;
@@ -252,7 +252,7 @@ void MouseCallback(GLFWwindow* window, double xPos, double yPos)
     }
 
     float xOffset = xPos - lastX;
-    float yOffset = lastY - yPos;
+    float yOffset = lastY - yPos;   // Don't look at me. You are weird too!
     lastX = xPos;
     lastY = yPos;
 

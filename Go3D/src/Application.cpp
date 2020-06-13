@@ -8,6 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "Camera.h"
+#include "VertexBuffer.h"
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
@@ -120,18 +121,14 @@ int main()
     };
 
     // Generate buffers.
-    unsigned int vb, va;
-    glGenBuffers(1, &vb);
+    unsigned int va;
     glGenVertexArrays(1, &va);
 
-    // Copy vertex buffer data.
-    glBindBuffer(GL_ARRAY_BUFFER, vb);
-    glBufferData(GL_ARRAY_BUFFER, 36 * 5 * sizeof(float), vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    VertexBuffer* vb = new VertexBuffer(vertices, 36 * 5 * sizeof(float));
 
     // Pack vertex buffer and vertex buffer layout into vertex array object.
     glBindVertexArray(va);
-    glBindBuffer(GL_ARRAY_BUFFER, vb);
+    vb->Bind();
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (const void*)0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (const void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
@@ -231,7 +228,7 @@ int main()
     }
 
     // Clean up.
-    glDeleteBuffers(1, &vb);
+    delete vb;
     glDeleteVertexArrays(1, &va);
     glDeleteTextures(1, &texture);
     delete shader;

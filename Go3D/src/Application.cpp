@@ -147,18 +147,7 @@ int main()
     objectShader->Bind();
     objectShader->SetUniform("u_model", objectModel);
 
-    // Send light source position to the objectShader for calculating diffuse lighting.
-    objectShader->SetUniform("u_lightSourcePosition", lightSourcePos);
-    // This is the light position in the world coordinate system. So if the light position
-    // in the world coordinate system were to change over time, we would've needed to set
-    // the uniform in the render loop.
-
-    // Set up the light source
-    glm::mat4 lightSourceModel = glm::mat4(1.0f);
-    lightSourceModel = glm::translate(lightSourceModel, lightSourcePos);
-    lightSourceModel = glm::scale(lightSourceModel, glm::vec3(0.2f));
-    lightSourceShader->Bind();
-    lightSourceShader->SetUniform("u_model", lightSourceModel);
+    
 
 
     // Initial projection matrix.
@@ -178,6 +167,22 @@ int main()
         updateDeltaTime();
         ProcessInput(window);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+        // Move light source around over time.
+        float theta = glm::radians((float)glfwGetTime()) * 100;
+        const float radius = 2.0f;
+        lightSourcePos = glm::vec3(radius * cos(theta), 0.0f, radius * sin(theta));
+
+        glm::mat4 lightSourceModel = glm::mat4(1.0f);
+        lightSourceModel = glm::translate(lightSourceModel, glm::vec3(lightSourcePos));
+        lightSourceModel = glm::scale(lightSourceModel, glm::vec3(0.2f));
+        lightSourceShader->Bind();
+        lightSourceShader->SetUniform("u_model", lightSourceModel);
+
+        // Send light source position to the objectShader for calculating diffuse lighting.
+        objectShader->Bind();
+        objectShader->SetUniform("u_lightSourcePosition", lightSourcePos);
 
         
         // Update view/camera each frame.

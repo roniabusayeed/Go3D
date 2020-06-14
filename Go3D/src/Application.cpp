@@ -86,55 +86,54 @@ int main()
 
     // Vertex data.
     float vertices[] = {
-        // Position             // Texture coordinates
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     // 0
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,     // 1
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 2
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 3
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     // 4
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     // 5
-                                                
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 6
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     // 7
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,     // 8
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,     // 9
-        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,     // 10
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 11
-                                                
-        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 12
-        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 13
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 14
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 15
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 16
-        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 17
-                                                
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 18
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 29
-         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 20
-         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 21
-         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 22
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 23
-                                                
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 24 
-         0.5f, -0.5f, -0.5f,    1.0f, 1.0f,     // 25
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     // 26
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     // 27
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     // 28
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     // 29
-                                                
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     // 30
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     // 31
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 32
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     // 33
-        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,     // 34
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f      // 35
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
     // Generate buffers.
-    VertexBuffer* vb = new VertexBuffer(vertices, sizeof(float) * 5 * 36);
+    VertexBuffer* vb = new VertexBuffer(vertices, sizeof(float) * 6 * 36);
     VertexBufferLayout* layout = new VertexBufferLayout();
     layout->Push<float>(3);
-    layout->Push<float>(2);
+    layout->Push<float>(3);
 
     VertexArray* objectVA = new VertexArray(*vb, *layout);
     VertexArray* lightSourceVA = new VertexArray(*vb, *layout);
@@ -147,6 +146,12 @@ int main()
     glm::mat4 objectModel = glm::mat4(1.0f);
     objectShader->Bind();
     objectShader->SetUniform("u_model", objectModel);
+
+    // Send light source position to the objectShader for calculating diffuse lighting.
+    objectShader->SetUniform("u_lightSourcePosition", lightSourcePos);
+    // This is the light position in the world coordinate system. So if the light position
+    // in the world coordinate system were to change over time, we would've needed to set
+    // the uniform in the render loop.
 
     // Set up the light source
     glm::mat4 lightSourceModel = glm::mat4(1.0f);
@@ -186,6 +191,9 @@ int main()
         objectShader->Bind();
         objectShader->SetUniform("u_objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
         objectShader->SetUniform("u_lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        // Send camera position to object shader to calculate specular intensity.
+        objectShader->SetUniform("u_cameraPosition", camera->GetPosition());
 
         // Render the object.
         renderer.Draw(*objectVA, *objectShader);

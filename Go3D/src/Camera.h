@@ -38,6 +38,7 @@ public:
     void SetCameraSpeed(float speed);
     void SetSensitivity(float sensitivity);
     void SetZoomSensitivity(float zoomSensitivity);
+    glm::vec3 GetPosition()const;
 private:
     glm::mat4 LookAt(const glm::vec3& cameraPos, const glm::vec3& cameraTarget, const glm::vec3& upVector)const;
 };

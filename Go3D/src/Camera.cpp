@@ -94,7 +94,7 @@ void Camera::ProcessKeyboard(CameraMovement movement, double deltaTime)
     }
 
     // Since a true FPS camera cannot fly, restrict the camera on zx (ground) plane.
-    cameraPos.y = 0.0f;
+    // cameraPos.y = 0.0f;
 }
 
 glm::mat4 Camera::GetViewMatrix() const
@@ -115,6 +115,11 @@ void Camera::SetSensitivity(float sensitivity)
 void Camera::SetZoomSensitivity(float zoomSensitivity)
 {
     this->zoomSensitivity = zoomSensitivity;
+}
+
+glm::vec3 Camera::GetPosition() const
+{
+    return cameraPos;
 }
 
 glm::mat4 Camera::LookAt(const glm::vec3& cameraPos, const glm::vec3& cameraTarget, const glm::vec3& upVector) const

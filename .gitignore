@@ -3,3 +3,5 @@ bin/intermediates/
 bin/**/Debug/
 TODO
 TEMP
+bin/**/Release
+Go3D/res/textures/
